@@ -24,6 +24,9 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
     let cdk_json = generate_cdk_json(config, &kebab_case_name)?;
     println!("Modified cdk.json content:\n{}", cdk_json.content);
 
+    let gitignore = generate_gitignore(config)?;
+    println!("Modified .gitignore content:\n{}", gitignore.content);
+
     Ok(())
 }
 
@@ -106,6 +109,26 @@ fn generate_cdk_json(config: &ProjectConfig, project_name: &str) -> Result<Templ
 
     Ok(TemplateFile {
         file_path: cdk_json_path,
+        content,
+    })
+}
+
+fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
+    let gitignore_path = format!("templates/.gitignore");
+
+    // .gitignoreの内容を読み込む
+    let mut content = std::fs::read_to_string(&gitignore_path)?;
+
+    // テストモジュールの置き換え
+    let test_file = match config.test_tool {
+        TestTool::Vitest => "vitest.config.mjs",
+        TestTool::Jest => "jest.config.mjs",
+        TestTool::None => "",
+    };
+    content = content.replace("%test_file%", test_file);
+
+    Ok(TemplateFile {
+        file_path: gitignore_path,
         content,
     })
 }
