@@ -2,12 +2,16 @@
   "name": "%project-name%",
   "version": "0.1.0",
   "scripts": {
-    "test": "%test_command%",
+    "%test_command%",
     "type-check": "tsc --noEmit",
-    "format": "%format_command%",
-    "lint": "%lint_command%"
+    "%format_command%",
+    "%lint_command%",
+    "cdk": "cdk"
   },
   "devDependencies": {
+    "%test_module%",
+    "%lint_module%",
+    "%format_module%",
     "@types/node": "22.10.1",
     "aws-cdk": "2.166.0",
     "ts-node": "^10.9.2",

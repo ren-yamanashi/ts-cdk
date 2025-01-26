@@ -9,7 +9,7 @@ fn main() -> Result<()> {
     match commands::init::execute() {
         Ok(config) => {
             // println!("config: {:?}", config);
-            templates::generate_template_file_paths(&config);
+            templates::execute(&config);
         }
         Err(e) => {
             println!("Error: {}", e);
