@@ -4,12 +4,14 @@ use crate::commands::init::ProjectConfig;
 use crate::commands::init::TestTool;
 use anyhow::Result;
 
+#[derive(Debug)]
 pub struct TemplateFile {
     pub file_path: String,
     pub content: String,
 }
 
 // NOTE: templateとして出力するファイルパスを格納するstruct
+#[derive(Debug)]
 pub struct TemplateFiles {
     pub files: Vec<TemplateFile>,
 }
@@ -17,15 +19,30 @@ pub struct TemplateFiles {
 pub fn execute(config: &ProjectConfig) -> Result<()> {
     // プロジェクト名をkebab-caseに変換
     let kebab_case_name = to_kebab_case(&config.name);
+    let pascal_case_name = to_pascal_case(&config.name);
 
     let package_json = generate_package_json(config, &kebab_case_name)?;
-    println!("Modified package.json content:\n{}", package_json.content);
-
     let cdk_json = generate_cdk_json(config, &kebab_case_name)?;
-    println!("Modified cdk.json content:\n{}", cdk_json.content);
-
     let gitignore = generate_gitignore(config)?;
-    println!("Modified .gitignore content:\n{}", gitignore.content);
+    let test_file = generate_test_file(config, &kebab_case_name, &pascal_case_name)?;
+    let lib_file = generate_lib_file(config, &kebab_case_name, &pascal_case_name)?;
+    let bin_file = generate_bin_file(config, &kebab_case_name, &pascal_case_name)?;
+    
+    // distディレクトリが存在しない場合は作成
+    std::fs::create_dir_all("dist")?;
+
+    // 各ファイルを生成
+    for file in [&package_json, &cdk_json, &gitignore, &test_file, &lib_file, &bin_file] {
+        let dist_path = format!("dist/{}", file.file_path.replace("templates/", ""));
+        
+        // ディレクトリが存在しない場合は作成
+        if let Some(parent) = std::path::Path::new(&dist_path).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        
+        // ファイルを書き込み
+        std::fs::write(&dist_path, &file.content)?;
+    }
 
     Ok(())
 }
@@ -133,6 +150,78 @@ fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
     })
 }
 
+fn generate_test_file(
+    config: &ProjectConfig,
+    kebab_case_name: &str,
+    pascal_case_name: &str,
+) -> Result<TemplateFile> {
+    // テンプレートファイルのパスを正しく設定
+    let template_path = "templates/test/%project-name%.test.ts";
+
+    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
+    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
+
+    // テンプレートファイルの内容を読み込む
+    let mut content = std::fs::read_to_string(template_path)?;
+
+    // ファイル内の置換を実行
+    content = content.replace("%project-name%", kebab_case_name);
+    content = content.replace("%ProjectName%", pascal_case_name);
+
+    Ok(TemplateFile {
+        file_path: actual_file_path,
+        content,
+    })
+}
+
+fn generate_lib_file(
+    config: &ProjectConfig,
+    kebab_case_name: &str,
+    pascal_case_name: &str,
+) -> Result<TemplateFile> {
+    // テンプレートファイルのパスを正しく設定
+    let template_path = "templates/lib/%project-name%-stack.ts";
+
+    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
+    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
+
+    // テンプレートファイルの内容を読み込む
+    let mut content = std::fs::read_to_string(template_path)?;
+
+    // ファイル内の置換を実行
+    content = content.replace("%project-name%", kebab_case_name);
+    content = content.replace("%ProjectName%", pascal_case_name);
+
+    Ok(TemplateFile {
+        file_path: actual_file_path,
+        content,
+    })
+}
+
+fn generate_bin_file(
+    config: &ProjectConfig,
+    kebab_case_name: &str,
+    pascal_case_name: &str,
+) -> Result<TemplateFile> {
+    // テンプレートファイルのパスを正しく設定
+    let template_path = "templates/bin/%project-name%.ts";
+
+    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
+    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
+
+    // テンプレートファイルの内容を読み込む
+    let mut content = std::fs::read_to_string(template_path)?;
+
+    // ファイル内の置換を実行
+    content = content.replace("%project-name%", kebab_case_name);
+    content = content.replace("%ProjectName%", pascal_case_name);
+
+    Ok(TemplateFile {
+        file_path: actual_file_path,
+        content,
+    })
+}
+
 fn to_kebab_case(s: &str) -> String {
     let mut result = String::new();
     for (i, c) in s.chars().enumerate() {
@@ -142,4 +231,24 @@ fn to_kebab_case(s: &str) -> String {
         result.push(c.to_lowercase().next().unwrap());
     }
     result.replace(' ', "-").replace('_', "-")
+}
+
+fn to_pascal_case(s: &str) -> String {
+    let words: Vec<String> = s
+        .split(|c| c == '-' || c == '_' || c == ' ')
+        .filter(|s| !s.is_empty())
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => {
+                    let mut word = first.to_ascii_uppercase().to_string();
+                    word.extend(chars.map(|c| c.to_ascii_lowercase()));
+                    word
+                }
+            }
+        })
+        .collect();
+
+    words.join("")
 }
