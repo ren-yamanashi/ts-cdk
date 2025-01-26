@@ -1,0 +1,21 @@
+{
+  "name": "%project-name%",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "%test_command%",
+    "type-check": "tsc --noEmit",
+    "format": "%format_command%",
+    "lint": "%lint_command%"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.1",
+    "aws-cdk": "2.166.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.6.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.171.1",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  }
+}
