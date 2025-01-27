@@ -2,6 +2,7 @@ use crate::cli::init::Formatter;
 use crate::cli::init::Linter;
 use crate::cli::init::ProjectConfig;
 use crate::cli::init::TestTool;
+use crate::templates::assets::TEMPLATES;
 
 use anyhow::Result;
 
@@ -73,35 +74,58 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
 }
 
 fn generate_tsconfig() -> Result<TemplateFile> {
-    let tsconfig_path = format!("templates/tsconfig.json");
-    let content = std::fs::read_to_string(&tsconfig_path)?;
+    let file_path = "templates/tsconfig.json";
+    let content = TEMPLATES
+        .get_file("tsconfig.json")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load tsconfig.json template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read tsconfig.json template as UTF-8"))?
+        .to_string();
+
     Ok(TemplateFile {
-        file_path: tsconfig_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_readme() -> Result<TemplateFile> {
-    let readme_path = format!("templates/README.md");
-    let content = std::fs::read_to_string(&readme_path)?;
+    let file_path = "templates/README.md";
+    let content = TEMPLATES
+        .get_file("README.md")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load README.md template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read README.md template as UTF-8"))?
+        .to_string();
+
     Ok(TemplateFile {
-        file_path: readme_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_npmignore() -> Result<TemplateFile> {
-    let npmignore_path = format!("templates/.npmignore");
-    let content = std::fs::read_to_string(&npmignore_path)?;
+    let file_path = "templates/.npmignore";
+    let content = TEMPLATES
+        .get_file(".npmignore")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load .npmignore template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read .npmignore template as UTF-8"))?
+        .to_string();
+
     Ok(TemplateFile {
-        file_path: npmignore_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<TemplateFile> {
-    let package_json_path = format!("templates/package.json");
-    let mut content = std::fs::read_to_string(&package_json_path)?;
+    let file_path = "templates/package.json";
+    let mut content = TEMPLATES
+        .get_file("package.json")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load package.json template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read package.json template as UTF-8"))?
+        .to_string();
 
     // Replace %project-name%
     content = content.replace("%project-name%", project_name);
@@ -162,27 +186,37 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     content = content.replace("%format_module%", format_module);
 
     Ok(TemplateFile {
-        file_path: package_json_path,
+        file_path: file_path.to_string(),
         content: remove_empty_lines_and_quotes(&content),
     })
 }
 
 fn generate_cdk_json(project_name: &str) -> Result<TemplateFile> {
-    let cdk_json_path = format!("templates/cdk.json");
-    let mut content = std::fs::read_to_string(&cdk_json_path)?;
+    let file_path = "templates/cdk.json";
+    let mut content = TEMPLATES
+        .get_file("cdk.json")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load cdk.json template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read cdk.json template as UTF-8"))?
+        .to_string();
 
     // Replace %project-name%
     content = content.replace("%project-name%", project_name);
 
     Ok(TemplateFile {
-        file_path: cdk_json_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
-    let gitignore_path = format!("templates/.gitignore");
-    let mut content = std::fs::read_to_string(&gitignore_path)?;
+    let file_path = "templates/.gitignore";
+    let mut content = TEMPLATES
+        .get_file(".gitignore")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load .gitignore template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read .gitignore template as UTF-8"))?
+        .to_string();
 
     // Replace %test_file%
     let test_file = match config.test_tool {
@@ -193,52 +227,64 @@ fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
     content = content.replace("%test_file%", test_file);
 
     Ok(TemplateFile {
-        file_path: gitignore_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let template_path = "templates/test/%project-name%.test.ts";
-    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-    let mut content = std::fs::read_to_string(template_path)?;
+    let file_path = "templates/test/%project-name%.test.ts";
+    let mut content = TEMPLATES
+        .get_file("test/%project-name%.test.ts")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load test file template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read test file template as UTF-8"))?
+        .to_string();
 
     // Replace %project-name%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
     Ok(TemplateFile {
-        file_path: actual_file_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let template_path = "templates/lib/%project-name%-stack.ts";
-    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-    let mut content = std::fs::read_to_string(template_path)?;
+    let file_path = "templates/lib/%project-name%-stack.ts";
+    let mut content = TEMPLATES
+        .get_file("lib/%project-name%-stack.ts")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load lib file template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read lib file template as UTF-8"))?
+        .to_string();
 
     // Replace %project-name%, %ProjectName%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
     Ok(TemplateFile {
-        file_path: actual_file_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
 
 fn generate_bin_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let template_path = "templates/bin/%project-name%.ts";
-    let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-    let mut content = std::fs::read_to_string(template_path)?;
+    let file_path = "templates/bin/%project-name%.ts";
+    let mut content = TEMPLATES
+        .get_file("bin/%project-name%.ts")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load bin file template"))?
+        .contents_utf8()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read bin file template as UTF-8"))?
+        .to_string();
 
     // Replace %project-name%, %ProjectName%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
     Ok(TemplateFile {
-        file_path: actual_file_path,
+        file_path: file_path.to_string(),
         content,
     })
 }
@@ -246,18 +292,28 @@ fn generate_bin_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<Te
 fn generate_lint_config_file(config: &ProjectConfig) -> Result<Option<TemplateFile>> {
     let lint_config = match config.linter {
         Linter::EsLint => {
-            let lint_config_path = format!("templates/eslint.config.mjs");
-            let content = std::fs::read_to_string(&lint_config_path)?;
+            let file_path = "templates/eslint.config.mjs";
+            let content = TEMPLATES
+                .get_file("eslint.config.mjs")
+                .ok_or_else(|| anyhow::anyhow!("Failed to load eslint.config.mjs template"))?
+                .contents_utf8()
+                .ok_or_else(|| anyhow::anyhow!("Failed to read eslint.config.mjs template as UTF-8"))?
+                .to_string();
             Some(TemplateFile {
-                file_path: lint_config_path,
+                file_path: file_path.to_string(),
                 content,
             })
         }
         Linter::Biome => {
-            let lint_config_path = format!("templates/biome.json");
-            let content = std::fs::read_to_string(&lint_config_path)?;
+            let file_path = "templates/biome.json";
+            let content = TEMPLATES
+                .get_file("biome.json")
+                .ok_or_else(|| anyhow::anyhow!("Failed to load biome.json template"))?
+                .contents_utf8()
+                .ok_or_else(|| anyhow::anyhow!("Failed to read biome.json template as UTF-8"))?
+                .to_string();
             Some(TemplateFile {
-                file_path: lint_config_path,
+                file_path: file_path.to_string(),
                 content,
             })
         }
@@ -269,18 +325,28 @@ fn generate_lint_config_file(config: &ProjectConfig) -> Result<Option<TemplateFi
 fn generate_test_config_file(config: &ProjectConfig) -> Result<Option<TemplateFile>> {
     let test_config = match config.test_tool {
         TestTool::Vitest => {
-            let test_config_path = format!("templates/vitest.config.mjs");
-            let content = std::fs::read_to_string(&test_config_path)?;
+            let file_path = "templates/vitest.config.mjs";
+            let content = TEMPLATES
+                .get_file("vitest.config.mjs")
+                .ok_or_else(|| anyhow::anyhow!("Failed to load vitest.config.mjs template"))?
+                .contents_utf8()
+                .ok_or_else(|| anyhow::anyhow!("Failed to read vitest.config.mjs template as UTF-8"))?
+                .to_string();
             Some(TemplateFile {
-                file_path: test_config_path,
+                file_path: file_path.to_string(),
                 content,
             })
         }
         TestTool::Jest => {
-            let test_config_path = format!("templates/jest.config.js");
-            let content = std::fs::read_to_string(&test_config_path)?;
+            let file_path = "templates/jest.config.js";
+            let content = TEMPLATES
+                .get_file("jest.config.js")
+                .ok_or_else(|| anyhow::anyhow!("Failed to load jest.config.js template"))?
+                .contents_utf8()
+                .ok_or_else(|| anyhow::anyhow!("Failed to read jest.config.js template as UTF-8"))?
+                .to_string();
             Some(TemplateFile {
-                file_path: test_config_path,
+                file_path: file_path.to_string(),
                 content,
             })
         }
@@ -292,10 +358,15 @@ fn generate_test_config_file(config: &ProjectConfig) -> Result<Option<TemplateFi
 fn generate_formatter_config_file(config: &ProjectConfig) -> Result<Option<TemplateFile>> {
     let formatter_config = match config.formatter {
         Formatter::Prettier => {
-            let formatter_config_path = format!("templates/.prettierrc");
-            let content = std::fs::read_to_string(&formatter_config_path)?;
+            let file_path = "templates/.prettierrc";
+            let content = TEMPLATES
+                .get_file(".prettierrc")
+                .ok_or_else(|| anyhow::anyhow!("Failed to load .prettierrc template"))?
+                .contents_utf8()
+                .ok_or_else(|| anyhow::anyhow!("Failed to read .prettierrc template as UTF-8"))?
+                .to_string();
             Some(TemplateFile {
-                file_path: formatter_config_path,
+                file_path: file_path.to_string(),
                 content,
             })
         }

@@ -1,6 +1,5 @@
 use anyhow::Result;
 use dialoguer::{Input, Select};
-use std::env;
 
 #[derive(Debug)]
 pub struct ProjectConfig {
@@ -40,9 +39,7 @@ pub enum TestTool {
     None,
 }
 
-pub fn convert_project_config() -> Result<ProjectConfig> {
-    let args: Vec<String> = env::args().skip(1).collect();
-
+pub fn convert_project_config(args: &Vec<String>) -> Result<ProjectConfig> {
     let target_dir_path = generate_dir_path(&args)?;
 
     let name = Input::<String>::new()

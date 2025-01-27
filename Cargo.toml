@@ -1,5 +1,5 @@
 [package]
-name = "init-ts-cdk"
+name = "ts-cdk"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,8 @@ edition = "2021"
 clap = { version = "4.5.1", features = ["derive"] }
 dialoguer = "0.11.0"
 anyhow = "1.0"
+include_dir = "0.7.3"
+
+[[bin]]
+name = "ts-cdk"
+path = "src/main.rs"
