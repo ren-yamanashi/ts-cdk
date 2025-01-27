@@ -233,7 +233,7 @@ fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
 }
 
 fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/test/%project-name%.test.ts";
+    let file_path = "templates/test/%project-name%.test.ts".replace("%project-name%", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("test/%project-name%.test.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load test file template"))?
@@ -252,7 +252,7 @@ fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<T
 }
 
 fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/lib/%project-name%-stack.ts";
+    let file_path = "templates/lib/%project-name%-stack.ts".replace("%project-name%", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("lib/%project-name%-stack.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load lib file template"))?
@@ -271,7 +271,7 @@ fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<Te
 }
 
 fn generate_bin_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/bin/%project-name%.ts";
+    let file_path = "templates/bin/%project-name%.ts".replace("%project-name%", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("bin/%project-name%.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load bin file template"))?
