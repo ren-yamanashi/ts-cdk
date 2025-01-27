@@ -12,9 +12,8 @@ pub struct TemplateFile {
 }
 
 pub fn execute(config: &ProjectConfig) -> Result<()> {
-    // プロジェクト名をkebab-caseに変換
     let kebab_case_name = to_kebab_case(&config.name);
-    let pascal_case_name = to_pascal_case(&config.name);
+    let pascal_case_name = kebab_case_to_pascal_case(&kebab_case_name);
 
     let tsconfig = generate_tsconfig()?;
     let readme = generate_readme()?;
@@ -33,7 +32,6 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
     // distディレクトリが存在しない場合は作成
     std::fs::create_dir_all("dist")?;
 
-    // 基本ファイルを生成
     let base_files = [
         &package_json,
         &tsconfig,
@@ -54,11 +52,7 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
         std::fs::write(&dist_path, &file.content)?;
     }
 
-    let optional_files = [
-        &lint_config_file,
-        &test_config_file,
-        &formatter_config_file,
-    ];
+    let optional_files = [&lint_config_file, &test_config_file, &formatter_config_file];
 
     for optional_file in optional_files.iter() {
         if let Some(file) = optional_file {
@@ -66,16 +60,13 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
             std::fs::write(&dist_path, &file.content)?;
         }
     }
-    
+
     Ok(())
 }
 
 fn generate_tsconfig() -> Result<TemplateFile> {
     let tsconfig_path = format!("templates/tsconfig.json");
-
-    // tsconfig.jsonの内容を読み込む
     let content = std::fs::read_to_string(&tsconfig_path)?;
-
     Ok(TemplateFile {
         file_path: tsconfig_path,
         content,
@@ -84,26 +75,30 @@ fn generate_tsconfig() -> Result<TemplateFile> {
 
 fn generate_readme() -> Result<TemplateFile> {
     let readme_path = format!("templates/README.md");
-
-    // README.mdの内容を読み込む
     let content = std::fs::read_to_string(&readme_path)?;
-
     Ok(TemplateFile {
         file_path: readme_path,
         content,
     })
 }
 
+fn generate_npmignore() -> Result<TemplateFile> {
+    let npmignore_path = format!("templates/.npmignore");
+    let content = std::fs::read_to_string(&npmignore_path)?;
+    Ok(TemplateFile {
+        file_path: npmignore_path,
+        content,
+    })
+}
+
 fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<TemplateFile> {
     let package_json_path = format!("templates/package.json");
-
-    // package.jsonの内容を読み込む
     let mut content = std::fs::read_to_string(&package_json_path)?;
 
-    // %project-name%をkebab-caseに変換したconfig.nameで置き換える
+    // Replace %project-name%
     content = content.replace("%project-name%", project_name);
 
-    // テストコマンドの置き換え
+    // Replace %test_command%
     let test_command = match config.test_tool {
         TestTool::Vitest => "test\": \"vitest --run",
         TestTool::Jest => "test\": \"jest",
@@ -111,7 +106,7 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     };
     content = content.replace("%test_command%", test_command);
 
-    // リントコマンドの置き換え
+    // Replace %lint_command%
     let lint_command = match config.linter {
         Linter::EsLint => "lint\": \"eslint --config eslint.config.mjs",
         Linter::Biome => "lint\": \"biome lint",
@@ -119,17 +114,17 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     };
     content = content.replace("%lint_command%", lint_command);
 
-    // フォーマットコマンドの置き換え
+    // Replace %format_command%
     let format_command = match config.formatter {
         Formatter::Prettier => {
             "format\": \"prettier --write \'**/*.ts\' --ignore-path .prettierignore"
         }
-        Formatter::Biome => "format\": \"biome format\"",
+        Formatter::Biome => "format\": \"biome format",
         Formatter::None => "",
     };
     content = content.replace("%format_command%", format_command);
 
-    // テストモジュールの置き換え
+    // Replace %test_module%
     let test_module = match config.test_tool {
         TestTool::Vitest => "vitest\": \"^3.0.4",
         TestTool::Jest => {
@@ -139,7 +134,7 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     };
     content = content.replace("%test_module%", test_module);
 
-    // リントモジュールの置き換え
+    // Replace %lint_module%
     let lint_module = match config.linter {
         Linter::EsLint => "@eslint/js\": \"^9.19.0\",\n    \"typescript-eslint\": \"^8.14.0\",\n    \"eslint-cdk-plugin\": \"^1.1.1",
         Linter::Biome => "biome\": \"^1.6.0",
@@ -147,7 +142,7 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     };
     content = content.replace("%lint_module%", lint_module);
 
-    // フォーマットモジュールの置き換え
+    // Replace %format_module%
     let format_module = match config.formatter {
         Formatter::Prettier => "prettier\": \"^3.4.2",
         Formatter::Biome => match config.linter {
@@ -160,17 +155,15 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
 
     Ok(TemplateFile {
         file_path: package_json_path,
-        content,
+        content: remove_empty_lines_and_quotes(&content),
     })
 }
 
 fn generate_cdk_json(project_name: &str) -> Result<TemplateFile> {
     let cdk_json_path = format!("templates/cdk.json");
-
-    // cdk.jsonの内容を読み込む
     let mut content = std::fs::read_to_string(&cdk_json_path)?;
 
-    // %project-name%をkebab-caseに変換したconfig.nameで置き換える
+    // Replace %project-name%
     content = content.replace("%project-name%", project_name);
 
     Ok(TemplateFile {
@@ -181,11 +174,9 @@ fn generate_cdk_json(project_name: &str) -> Result<TemplateFile> {
 
 fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
     let gitignore_path = format!("templates/.gitignore");
-
-    // .gitignoreの内容を読み込む
     let mut content = std::fs::read_to_string(&gitignore_path)?;
 
-    // テストモジュールの置き換え
+    // Replace %test_file%
     let test_file = match config.test_tool {
         TestTool::Vitest => "vitest.config.mjs",
         TestTool::Jest => "jest.config.mjs",
@@ -200,16 +191,11 @@ fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
 }
 
 fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    // テンプレートファイルのパスを正しく設定
     let template_path = "templates/test/%project-name%.test.ts";
-
-    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
     let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-
-    // テンプレートファイルの内容を読み込む
     let mut content = std::fs::read_to_string(template_path)?;
 
-    // ファイル内の置換を実行
+    // Replace %project-name%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
@@ -220,16 +206,11 @@ fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<T
 }
 
 fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    // テンプレートファイルのパスを正しく設定
     let template_path = "templates/lib/%project-name%-stack.ts";
-
-    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
     let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-
-    // テンプレートファイルの内容を読み込む
     let mut content = std::fs::read_to_string(template_path)?;
 
-    // ファイル内の置換を実行
+    // Replace %project-name%, %ProjectName%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
@@ -240,16 +221,11 @@ fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<Te
 }
 
 fn generate_bin_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    // テンプレートファイルのパスを正しく設定
     let template_path = "templates/bin/%project-name%.ts";
-
-    // 実際のファイルパスを生成（%project-name%をkebab_case_nameで置換）
     let actual_file_path = template_path.replace("%project-name%", kebab_case_name);
-
-    // テンプレートファイルの内容を読み込む
     let mut content = std::fs::read_to_string(template_path)?;
 
-    // ファイル内の置換を実行
+    // Replace %project-name%, %ProjectName%
     content = content.replace("%project-name%", kebab_case_name);
     content = content.replace("%ProjectName%", pascal_case_name);
 
@@ -321,19 +297,6 @@ fn generate_formatter_config_file(config: &ProjectConfig) -> Result<Option<Templ
     Ok(formatter_config)
 }
 
-
-fn generate_npmignore() -> Result<TemplateFile> {
-    let npmignore_path = format!("templates/.npmignore");
-
-    // tsconfig.jsonの内容を読み込む
-    let content = std::fs::read_to_string(&npmignore_path)?;
-
-    Ok(TemplateFile {
-        file_path: npmignore_path,
-        content,
-    })
-}
-
 fn to_kebab_case(s: &str) -> String {
     let mut result = String::new();
     for (i, c) in s.chars().enumerate() {
@@ -345,22 +308,29 @@ fn to_kebab_case(s: &str) -> String {
     result.replace(' ', "-").replace('_', "-")
 }
 
-fn to_pascal_case(s: &str) -> String {
-    let words: Vec<String> = s
-        .split(|c| c == '-' || c == '_' || c == ' ')
-        .filter(|s| !s.is_empty())
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => {
-                    let mut word = first.to_ascii_uppercase().to_string();
-                    word.extend(chars.map(|c| c.to_ascii_lowercase()));
-                    word
-                }
-            }
-        })
-        .collect();
+fn kebab_case_to_pascal_case(kebab_case_str: &str) -> String {
+    let mut result = String::new();
+    let mut capitalize_next = true;
+    for c in kebab_case_str.chars() {
+        if c == '-' {
+            capitalize_next = true;
+        } else if capitalize_next {
+            result.push(c.to_uppercase().next().unwrap());
+            capitalize_next = false;
+        } else {
+            result.push(c.to_lowercase().next().unwrap());
+        }
+    }
+    result
+}
 
-    words.join("")
+fn remove_empty_lines_and_quotes(content: &str) -> String {
+    content
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.is_empty() && trimmed != "\"\"" && trimmed != "\"\","
+        })
+        .collect::<Vec<&str>>()
+        .join("\n")
 }
