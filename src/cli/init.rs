@@ -1,8 +1,10 @@
 use anyhow::Result;
 use dialoguer::{Input, Select};
+use std::env;
 
 #[derive(Debug)]
 pub struct ProjectConfig {
+    pub target_dir_path: String,
     pub name: String,
     pub package_manager: PackageManager,
     pub linter: Linter,
@@ -39,36 +41,10 @@ pub enum TestTool {
 }
 
 pub fn convert_project_config() -> Result<ProjectConfig> {
-    let config = collect_user_input()?;
-    println!("config: {:?}", config);
-    Ok(config)
-}
+    let args: Vec<String> = env::args().skip(1).collect();
 
-pub fn install_dependencies(config: &ProjectConfig) -> Result<()> {
-    match config.package_manager {
-        PackageManager::Npm => {
-            std::process::Command::new("npm")
-                .arg("install")
-                .current_dir("dist")
-                .status()?;
-        }
-        PackageManager::Yarn => {
-            std::process::Command::new("yarn")
-                .arg("install")
-                .current_dir("dist")
-                .status()?;
-        }
-        PackageManager::Pnpm => {
-            std::process::Command::new("pnpm")
-                .arg("install")
-                .current_dir("dist")
-                .status()?;
-        }
-    }
-    Ok(())
-}
+    let target_dir_path = generate_dir_path(&args)?;
 
-fn collect_user_input() -> Result<ProjectConfig> {
     let name = Input::<String>::new()
         .with_prompt("Project name")
         .interact()?;
@@ -112,6 +88,7 @@ fn collect_user_input() -> Result<ProjectConfig> {
     println!("test_tool: {}", test_tools[test_tool]);
 
     Ok(ProjectConfig {
+        target_dir_path,
         name,
         package_manager: match package_managers[package_manager] {
             "npm" => PackageManager::Npm,
@@ -138,4 +115,41 @@ fn collect_user_input() -> Result<ProjectConfig> {
             _ => unreachable!(),
         },
     })
+}
+
+pub fn install_dependencies(config: &ProjectConfig) -> Result<()> {
+    match config.package_manager {
+        PackageManager::Npm => {
+            std::process::Command::new("npm")
+                .arg("install")
+                .current_dir(&config.target_dir_path)
+                .status()?;
+        }
+        PackageManager::Yarn => {
+            std::process::Command::new("yarn")
+                .arg("install")
+                .current_dir(&config.target_dir_path)
+                .status()?;
+        }
+        PackageManager::Pnpm => {
+            std::process::Command::new("pnpm")
+                .arg("install")
+                .current_dir(&config.target_dir_path)
+                .status()?;
+        }
+    }
+    Ok(())
+}
+
+fn generate_dir_path(args: &Vec<String>) -> Result<String> {
+    let raw_path = if args.is_empty() { "." } else { &args[0] }.to_string();
+
+    // Check references to parent directories.
+    if raw_path.contains("../") {
+        anyhow::bail!("Reference to parent directories not permitted");
+    }
+
+    let target_dir_path = raw_path.replace("./", "").trim_end_matches('/').to_string();
+
+    Ok(target_dir_path)
 }

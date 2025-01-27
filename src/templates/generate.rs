@@ -29,8 +29,8 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
     let test_config_file = generate_test_config_file(config)?;
     let formatter_config_file = generate_formatter_config_file(config)?;
 
-    // distディレクトリが存在しない場合は作成
-    std::fs::create_dir_all("dist")?;
+    // when directory is not exists, create it
+    std::fs::create_dir_all(&config.target_dir_path)?;
 
     let base_files = [
         &package_json,
@@ -45,19 +45,27 @@ pub fn execute(config: &ProjectConfig) -> Result<()> {
     ];
 
     for file in base_files.iter() {
-        let dist_path = format!("dist/{}", file.file_path.replace("templates/", ""));
-        if let Some(parent) = std::path::Path::new(&dist_path).parent() {
+        let target_dir_path = format!(
+            "{}/{}",
+            config.target_dir_path,
+            file.file_path.replace("templates/", "")
+        );
+        if let Some(parent) = std::path::Path::new(&target_dir_path).parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(&dist_path, &file.content)?;
+        std::fs::write(&target_dir_path, &file.content)?;
     }
 
     let optional_files = [&lint_config_file, &test_config_file, &formatter_config_file];
 
     for optional_file in optional_files.iter() {
         if let Some(file) = optional_file {
-            let dist_path = format!("dist/{}", file.file_path.replace("templates/", ""));
-            std::fs::write(&dist_path, &file.content)?;
+            let dir_path = format!(
+                "{}/{}",
+                config.target_dir_path,
+                file.file_path.replace("templates/", "")
+            );
+            std::fs::write(&dir_path, &file.content)?;
         }
     }
 
