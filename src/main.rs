@@ -1,16 +1,18 @@
 use anyhow::Result;
 
-mod commands;
+mod cli;
 mod templates;
 
+fn run() -> Result<()> {
+    let config = cli::init::convert_project_config()?;
+    templates::generate::execute(&config)?;
+    cli::init::install_dependencies(&config)?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    match commands::init::execute() {
-        Ok(config) => {
-            templates::execute(&config)?;
-        }
-        Err(e) => {
-            println!("Error: {}", e);
-        }
+    if let Err(e) = run() {
+        println!("Error: {}", e);
     }
     Ok(())
 }

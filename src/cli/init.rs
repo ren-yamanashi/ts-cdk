@@ -38,10 +38,34 @@ pub enum TestTool {
     None,
 }
 
-pub fn execute() -> Result<ProjectConfig> {
+pub fn convert_project_config() -> Result<ProjectConfig> {
     let config = collect_user_input()?;
     println!("config: {:?}", config);
     Ok(config)
+}
+
+pub fn install_dependencies(config: &ProjectConfig) -> Result<()> {
+    match config.package_manager {
+        PackageManager::Npm => {
+            std::process::Command::new("npm")
+                .arg("install")
+                .current_dir("dist")
+                .status()?;
+        }
+        PackageManager::Yarn => {
+            std::process::Command::new("yarn")
+                .arg("install")
+                .current_dir("dist")
+                .status()?;
+        }
+        PackageManager::Pnpm => {
+            std::process::Command::new("pnpm")
+                .arg("install")
+                .current_dir("dist")
+                .status()?;
+        }
+    }
+    Ok(())
 }
 
 fn collect_user_input() -> Result<ProjectConfig> {
