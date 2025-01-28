@@ -173,7 +173,7 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
     // Replace %lint_module%
     let lint_module = match config.linter {
         Linter::EsLint => "@eslint/js\": \"^9.19.0\",\n    \"typescript-eslint\": \"^8.14.0\",\n    \"eslint-cdk-plugin\": \"^1.1.1",
-        Linter::Biome => "biome\": \"^1.6.0",
+        Linter::Biome => "@biomejs/biome\": \"^1.9.4",
         Linter::None => "",
     };
     content = content.replace("%lint_module%", lint_module);
@@ -183,7 +183,7 @@ fn generate_package_json(config: &ProjectConfig, project_name: &str) -> Result<T
         Formatter::Prettier => "prettier\": \"^3.4.2",
         Formatter::Biome => match config.linter {
             Linter::Biome => "",
-            _ => "biome\": \"^1.6.0",
+            _ => "@biomejs/biome\": \"^1.9.4",
         },
         Formatter::None => "",
     };
@@ -216,10 +216,10 @@ fn generate_cdk_json(project_name: &str) -> Result<TemplateFile> {
 fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
     let file_path = "templates/.gitignore";
     let mut content = TEMPLATES
-        .get_file(".gitignore")
-        .ok_or_else(|| anyhow::anyhow!("Failed to load .gitignore template"))?
+        .get_file("_.gitignore")
+        .ok_or_else(|| anyhow::anyhow!("Failed to load _.gitignore template"))?
         .contents_utf8()
-        .ok_or_else(|| anyhow::anyhow!("Failed to read .gitignore template as UTF-8"))?
+        .ok_or_else(|| anyhow::anyhow!("Failed to read _.gitignore template as UTF-8"))?
         .to_string();
 
     // Replace %test_file%
@@ -237,7 +237,7 @@ fn generate_gitignore(config: &ProjectConfig) -> Result<TemplateFile> {
 }
 
 fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/test/%project-name%.test.ts".replace("%project-name%", kebab_case_name);
+    let file_path = format!("templates/test/{}.test.ts", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("test/%project-name%.test.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load test file template"))?
@@ -256,7 +256,7 @@ fn generate_test_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<T
 }
 
 fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/lib/%project-name%-stack.ts".replace("%project-name%", kebab_case_name);
+    let file_path = format!("templates/lib/{}-stack.ts", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("lib/%project-name%-stack.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load lib file template"))?
@@ -275,7 +275,7 @@ fn generate_lib_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<Te
 }
 
 fn generate_bin_file(kebab_case_name: &str, pascal_case_name: &str) -> Result<TemplateFile> {
-    let file_path = "templates/bin/%project-name%.ts".replace("%project-name%", kebab_case_name);
+    let file_path = format!("templates/bin/{}.ts", kebab_case_name);
     let mut content = TEMPLATES
         .get_file("bin/%project-name%.ts")
         .ok_or_else(|| anyhow::anyhow!("Failed to load bin file template"))?
@@ -301,7 +301,9 @@ fn generate_lint_config_file(config: &ProjectConfig) -> Result<Option<TemplateFi
                 .get_file("eslint.config.mjs")
                 .ok_or_else(|| anyhow::anyhow!("Failed to load eslint.config.mjs template"))?
                 .contents_utf8()
-                .ok_or_else(|| anyhow::anyhow!("Failed to read eslint.config.mjs template as UTF-8"))?
+                .ok_or_else(|| {
+                    anyhow::anyhow!("Failed to read eslint.config.mjs template as UTF-8")
+                })?
                 .to_string();
             Some(TemplateFile {
                 file_path: file_path.to_string(),
@@ -310,16 +312,31 @@ fn generate_lint_config_file(config: &ProjectConfig) -> Result<Option<TemplateFi
         }
         Linter::Biome => {
             let file_path = "templates/biome.json";
-            let content = TEMPLATES
-                .get_file("biome.json")
-                .ok_or_else(|| anyhow::anyhow!("Failed to load biome.json template"))?
-                .contents_utf8()
-                .ok_or_else(|| anyhow::anyhow!("Failed to read biome.json template as UTF-8"))?
-                .to_string();
-            Some(TemplateFile {
-                file_path: file_path.to_string(),
-                content,
-            })
+            if config.formatter == Formatter::Biome {
+                let content = TEMPLATES
+                    .get_file("biome.json")
+                    .ok_or_else(|| anyhow::anyhow!("Failed to load biome.json template"))?
+                    .contents_utf8()
+                    .ok_or_else(|| anyhow::anyhow!("Failed to read biome.json template as UTF-8"))?
+                    .to_string();
+                Some(TemplateFile {
+                    file_path: file_path.to_string(),
+                    content,
+                })
+            } else {
+                let content = TEMPLATES
+                    .get_file("biome.lint.json")
+                    .ok_or_else(|| anyhow::anyhow!("Failed to load biome.lint.json template"))?
+                    .contents_utf8()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Failed to read biome.lint.json template as UTF-8")
+                    })?
+                    .to_string();
+                Some(TemplateFile {
+                    file_path: file_path.to_string(),
+                    content,
+                })
+            }
         }
         Linter::None => None,
     };
@@ -334,7 +351,9 @@ fn generate_test_config_file(config: &ProjectConfig) -> Result<Option<TemplateFi
                 .get_file("vitest.config.mjs")
                 .ok_or_else(|| anyhow::anyhow!("Failed to load vitest.config.mjs template"))?
                 .contents_utf8()
-                .ok_or_else(|| anyhow::anyhow!("Failed to read vitest.config.mjs template as UTF-8"))?
+                .ok_or_else(|| {
+                    anyhow::anyhow!("Failed to read vitest.config.mjs template as UTF-8")
+                })?
                 .to_string();
             Some(TemplateFile {
                 file_path: file_path.to_string(),
@@ -374,7 +393,25 @@ fn generate_formatter_config_file(config: &ProjectConfig) -> Result<Option<Templ
                 content,
             })
         }
-        Formatter::Biome => None,
+        Formatter::Biome => {
+            if config.linter == Linter::Biome {
+                None
+            } else {
+                let file_path = "templates/biome.json";
+                let content = TEMPLATES
+                    .get_file("biome.format.json")
+                    .ok_or_else(|| anyhow::anyhow!("Failed to load biome.format.json template"))?
+                    .contents_utf8()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Failed to read biome.format.json template as UTF-8")
+                    })?
+                    .to_string();
+                Some(TemplateFile {
+                    file_path: file_path.to_string(),
+                    content,
+                })
+            }
+        }
         Formatter::None => None,
     };
     Ok(formatter_config)

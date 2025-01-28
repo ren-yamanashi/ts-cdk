@@ -22,16 +22,11 @@
     "ignore": ["node_modules", "*.js", "*.d.ts"]
   },
   "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "ignore": ["node_modules", "*.js", "*.d.ts"]
+    "enabled": false
   },
   "javascript": {
     "formatter": {
-      "enabled": true,
-      "indentStyle": "space",
-      "quoteStyle": "single"
+      "enabled": false
     }
   }
 }

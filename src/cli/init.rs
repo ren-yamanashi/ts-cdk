@@ -18,14 +18,14 @@ pub enum PackageManager {
     Pnpm,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Linter {
     EsLint,
     Biome,
     None,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Formatter {
     Prettier,
     Biome,

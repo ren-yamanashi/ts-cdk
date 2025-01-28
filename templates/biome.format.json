@@ -1,0 +1,19 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "linter": {
+    "enabled": false
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "ignore": ["node_modules", "*.js", "*.d.ts"]
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "quoteStyle": "single"
+    }
+  }
+}
