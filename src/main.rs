@@ -16,8 +16,8 @@ fn main() -> Result<()> {
 
     match command.as_str() {
         "init" => {
-            let config = cli::init::convert_project_config(&vec![target_dir.to_string()])?;
-            templates::generate::execute(&config)?;
+            let config = cli::init::generate_project_config(&vec![target_dir.to_string()])?;
+            templates::generate::generate_template_files(&config)?;
             cli::init::install_dependencies(&config)?;
         }
         _ => {

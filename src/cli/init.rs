@@ -39,8 +39,15 @@ pub enum TestTool {
     None,
 }
 
-pub fn convert_project_config(args: &Vec<String>) -> Result<ProjectConfig> {
-    let target_dir_path = generate_dir_path(&args)?;
+/// Generate ProjectConfig interactively.
+///
+/// ### Parameters
+/// - `args` - Arguments from the command line(target directory path)
+///
+/// ### Returns
+/// - `ProjectConfig` - ProjectConfig
+pub fn generate_project_config(args: &Vec<String>) -> Result<ProjectConfig> {
+    let target_dir_path = convert_to_dir_path(&args)?;
 
     let name = Input::<String>::new()
         .with_prompt("Project name")
@@ -114,6 +121,10 @@ pub fn convert_project_config(args: &Vec<String>) -> Result<ProjectConfig> {
     })
 }
 
+/// Install dependencies.
+///
+/// ### Parameters
+/// - `config` - ProjectConfig
 pub fn install_dependencies(config: &ProjectConfig) -> Result<()> {
     match config.package_manager {
         PackageManager::Npm => {
@@ -138,7 +149,7 @@ pub fn install_dependencies(config: &ProjectConfig) -> Result<()> {
     Ok(())
 }
 
-fn generate_dir_path(args: &Vec<String>) -> Result<String> {
+fn convert_to_dir_path(args: &Vec<String>) -> Result<String> {
     let raw_path = if args.is_empty() { "." } else { &args[0] }.to_string();
 
     // Check references to parent directories.

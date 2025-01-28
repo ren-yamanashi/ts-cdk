@@ -12,8 +12,12 @@ pub struct TemplateFile {
     pub content: String,
 }
 
-pub fn execute(config: &ProjectConfig) -> Result<()> {
-    let kebab_case_name = to_kebab_case(&config.name);
+/// Generate template files
+///
+/// ### Parameters
+/// - `config` - ProjectConfig
+pub fn generate_template_files(config: &ProjectConfig) -> Result<()> {
+    let kebab_case_name = convert_to_kebab_case(&config.name);
     let pascal_case_name = kebab_case_to_pascal_case(&kebab_case_name);
 
     let tsconfig = generate_tsconfig()?;
@@ -376,7 +380,7 @@ fn generate_formatter_config_file(config: &ProjectConfig) -> Result<Option<Templ
     Ok(formatter_config)
 }
 
-fn to_kebab_case(s: &str) -> String {
+fn convert_to_kebab_case(s: &str) -> String {
     let mut result = String::new();
     for (i, c) in s.chars().enumerate() {
         if i > 0 && c.is_uppercase() {
