@@ -144,46 +144,59 @@ download_binary_and_run_installer() {
     ensure chmod +x "$_install_dir/$_bin_name"
 
     if [ "$NO_MODIFY_PATH" = "0" ]; then
-        case :$PATH: in
-            *:$_install_dir:*) ;;
-            *)
-                # Add to current shell's PATH
-                export PATH="$PATH:$_install_dir"
-                
-                # Add to shell config files
-                for profile in ~/.profile ~/.bashrc ~/.zshrc; do
-                    if [ -w "$profile" ]; then
-                        say "adding $_install_dir to PATH in $profile"
-                        echo "" >> "$profile"
-                        echo "# ts-cdk PATH configuration" >> "$profile"
-                        echo "export PATH=\"\$PATH:$_install_dir\"" >> "$profile"
-                    fi
-                done
+        # Check if ts-cdk is already available in PATH
+        if command -v ts-cdk >/dev/null 2>&1; then
+            existing_ts_cdk=$(command -v ts-cdk)
+            if [ "$existing_ts_cdk" != "$_install_dir/$_bin_name" ]; then
+                say "ts-cdk is already installed at $existing_ts_cdk"
+                say "Not modifying PATH as ts-cdk is already available"
+            fi
+        else
+            case :$PATH: in
+                *:$_install_dir:*) ;;
+                *)
+                    # Add to current shell's PATH
+                    export PATH="$PATH:$_install_dir"
+                    
+                    # Add to shell config files
+                    for profile in ~/.profile ~/.bashrc ~/.zshrc; do
+                        if [ -w "$profile" ]; then
+                            say "adding $_install_dir to PATH in $profile"
+                            echo "" >> "$profile"
+                            echo "# ts-cdk PATH configuration" >> "$profile"
+                            echo "export PATH=\"\$PATH:$_install_dir\"" >> "$profile"
+                        fi
+                    done
 
-                # Create fish config if fish shell is installed
-                if command -v fish >/dev/null 2>&1; then
-                    fish_config_dir="$HOME/.config/fish/conf.d"
-                    if [ ! -d "$fish_config_dir" ]; then
-                        mkdir -p "$fish_config_dir"
+                    # Create fish config if fish shell is installed
+                    if command -v fish >/dev/null 2>&1; then
+                        fish_config_dir="$HOME/.config/fish/conf.d"
+                        if [ ! -d "$fish_config_dir" ]; then
+                            mkdir -p "$fish_config_dir"
+                        fi
+                        fish_config_file="$fish_config_dir/ts-cdk.fish"
+                        say "adding $_install_dir to PATH in $fish_config_file"
+                        echo "# ts-cdk PATH configuration" > "$fish_config_file"
+                        echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
                     fi
-                    fish_config_file="$fish_config_dir/ts-cdk.fish"
-                    say "adding $_install_dir to PATH in $fish_config_file"
-                    echo "# ts-cdk PATH configuration" > "$fish_config_file"
-                    echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
-                fi
-                ;;
-        esac
+                    ;;
+            esac
+        fi
     fi
 
     ignore rm -rf "$_dir"
 
     say "ts-cdk installation completed!"
-    say "You can now use 'ts-cdk' command in your terminal."
-    say "To use ts-cdk in new terminal windows, please restart your terminal or run:"
-    say "    source ~/.bashrc  # for bash"
-    say "    source ~/.zshrc   # for zsh"
-    if command -v fish >/dev/null 2>&1; then
-        say "    source ~/.config/fish/conf.d/ts-cdk.fish  # for fish"
+    
+    # Only show PATH-related messages if we modified the PATH
+    if [ "$NO_MODIFY_PATH" = "0" ] && ! command -v ts-cdk >/dev/null 2>&1; then
+        say "You can now use 'ts-cdk' command in your terminal."
+        say "To use ts-cdk in new terminal windows, please restart your terminal or run:"
+        say "    source ~/.bashrc  # for bash"
+        say "    source ~/.zshrc   # for zsh"
+        if command -v fish >/dev/null 2>&1; then
+            say "    source ~/.config/fish/conf.d/ts-cdk.fish  # for fish"
+        fi
     fi
 }
 
