@@ -37,6 +37,8 @@ jobs:
         with:
           bin: ts-cdk
           target: ${{ matrix.target }}
+          tar: unix
+          zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-installer:
@@ -51,5 +53,8 @@ jobs:
           # Get the version from the tag
           VERSION=${GITHUB_REF#refs/tags/}
           
+          # Make the installer script executable
+          chmod +x ts-cdk-installer.sh
+          
           # Upload the installer script
-          gh release upload $VERSION ts-cdk-installer.sh
+          gh release upload $VERSION ts-cdk-installer.sh --clobber
