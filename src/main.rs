@@ -1,3 +1,7 @@
+extern crate anyhow;
+extern crate dialoguer;
+extern crate include_dir;
+
 use anyhow::Result;
 use std::env;
 
