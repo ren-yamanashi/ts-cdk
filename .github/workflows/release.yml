@@ -70,7 +70,7 @@ jobs:
       - name: Configure static linking for Linux
         if: contains(matrix.target, 'linux')
         run: |
-          echo 'RUSTFLAGS="-C target-feature=+crt-static"' >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $GITHUB_ENV
       
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
