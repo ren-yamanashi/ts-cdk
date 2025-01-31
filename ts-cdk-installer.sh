@@ -147,12 +147,30 @@ download_binary_and_run_installer() {
         case :$PATH: in
             *:$_install_dir:*) ;;
             *)
+                # Add to current shell's PATH
+                export PATH="$PATH:$_install_dir"
+                
+                # Add to shell config files
                 for profile in ~/.profile ~/.bashrc ~/.zshrc; do
                     if [ -w "$profile" ]; then
                         say "adding $_install_dir to PATH in $profile"
+                        echo "" >> "$profile"
+                        echo "# ts-cdk PATH configuration" >> "$profile"
                         echo "export PATH=\"\$PATH:$_install_dir\"" >> "$profile"
                     fi
                 done
+
+                # Create fish config if fish shell is installed
+                if command -v fish >/dev/null 2>&1; then
+                    fish_config_dir="$HOME/.config/fish/conf.d"
+                    if [ ! -d "$fish_config_dir" ]; then
+                        mkdir -p "$fish_config_dir"
+                    fi
+                    fish_config_file="$fish_config_dir/ts-cdk.fish"
+                    say "adding $_install_dir to PATH in $fish_config_file"
+                    echo "# ts-cdk PATH configuration" > "$fish_config_file"
+                    echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
+                fi
                 ;;
         esac
     fi
@@ -160,6 +178,13 @@ download_binary_and_run_installer() {
     ignore rm -rf "$_dir"
 
     say "ts-cdk installation completed!"
+    say "You can now use 'ts-cdk' command in your terminal."
+    say "To use ts-cdk in new terminal windows, please restart your terminal or run:"
+    say "    source ~/.bashrc  # for bash"
+    say "    source ~/.zshrc   # for zsh"
+    if command -v fish >/dev/null 2>&1; then
+        say "    source ~/.config/fish/conf.d/ts-cdk.fish  # for fish"
+    fi
 }
 
 say() {
