@@ -50,4 +50,4 @@ my-cdk-app
 
 ## License
 
-MIT
+[MIT](LICENSE)
