@@ -41,6 +41,16 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+          components: rustc, rust-std, cargo
+      
+      - name: Install target
+        run: rustup target add ${{ matrix.target }}
+        
+      - name: Show Rust version and target info
+        run: |
+          rustc --version
+          rustup show
+          rustc -vV
       
       # Install build dependencies for Linux
       - name: Install Linux build dependencies
