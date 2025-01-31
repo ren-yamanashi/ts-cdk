@@ -134,10 +134,17 @@ jobs:
           cp ts-cdk-installer.sh release/
           cd release
           
-          # Test installer with local directory
-          INSTALLER_DOWNLOAD_URL="$(pwd)" \
+          # Create a simple HTTP server to serve the files
+          python3 -m http.server 8080 &
+          sleep 2  # Wait for server to start
+          
+          # Test installer with local HTTP server
+          INSTALLER_DOWNLOAD_URL="http://localhost:8080/v0.1.4" \
           INSTALLER_TARGET_TRIPLE="${{ matrix.target }}" \
           sh ts-cdk-installer.sh
+          
+          # Kill the HTTP server
+          kill %1
           
           # Test installed binary
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
