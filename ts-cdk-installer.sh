@@ -56,6 +56,7 @@ download_binary_and_run_installer() {
     need_cmd mkdir
     need_cmd rm
     need_cmd tar
+    need_cmd unzip
 
     for arg in "$@"; do
         case "$arg" in
@@ -103,6 +104,14 @@ download_binary_and_run_installer() {
     assert_nz "$_arch" "arch"
 
     local _ext=".tar.gz"
+    # Use .zip for Windows
+    case "$_arch" in
+        *-pc-windows-msvc)
+            _ext=".zip"
+            need_cmd unzip
+            ;;
+    esac
+
     local _artifact_name="${APP_NAME}-${_arch}${_ext}"
     local _url="${ARTIFACT_DOWNLOAD_URL}/${_artifact_name}"
     local _dir
@@ -117,6 +126,9 @@ download_binary_and_run_installer() {
     case "$_ext" in
         ".tar."*)
             ensure tar xf "$_file" -C "$_dir"
+            ;;
+        ".zip")
+            ensure unzip "$_file" -d "$_dir"
             ;;
         *)
             err "unknown archive format: $_ext"
