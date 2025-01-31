@@ -26,6 +26,8 @@ jobs:
             os: ubuntu-latest
           - target: x86_64-apple-darwin
             os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     runs-on: ${{ matrix.os }}
@@ -35,6 +37,19 @@ jobs:
         with:
           bin: ts-cdk
           target: ${{ matrix.target }}
-          tar: all
-          zip: all
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-installer:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload installer script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the version from the tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          
+          # Upload the installer script
+          gh release upload $VERSION ts-cdk-installer.sh
