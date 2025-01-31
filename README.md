@@ -33,16 +33,19 @@ ts-cdk init <directory>
 ## Generated Project Structure
 
 ```
-my-cdk-app/
-├── .gitignore
-├── .npmignore
-├── biome.json
+my-cdk-app
+├── bin
+│   └── my-cdk-app.ts
+├── lib
+│   └── my-cdk-app-stack.ts
+├── test
+│   └── my-cdk-app.test.ts
 ├── cdk.json
-├── jest.config.js
+├── eslint.config.mjs
 ├── package.json
+├── README.md
 ├── tsconfig.json
-└── src/
-    └── main.ts
+└── vitest.config.mjs
 ```
 
 ## License
