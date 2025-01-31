@@ -36,6 +36,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # Install Rust toolchain
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
       # Set up cross-compilation for ARM64 Linux
       - name: Set up cross-compilation
         if: matrix.target == 'aarch64-unknown-linux-gnu'
