@@ -167,18 +167,20 @@ download_binary_and_run_installer() {
                             echo "# ts-cdk PATH configuration" >> "$profile"
                             echo "export PATH=\"\$PATH:$_install_dir\"" >> "$profile"
                             # Source the profile immediately if it's the current shell's config
-                            case "$SHELL" in
-                                */bash)
-                                    if [ "$profile" = "$HOME/.bashrc" ]; then
-                                        . "$profile"
-                                    fi
-                                    ;;
-                                */zsh)
-                                    if [ "$profile" = "$HOME/.zshrc" ]; then
-                                        . "$profile"
-                                    fi
-                                    ;;
-                            esac
+                            if [ -n "${SHELL:-}" ]; then
+                                case "$SHELL" in
+                                    */bash)
+                                        if [ "$profile" = "$HOME/.bashrc" ]; then
+                                            . "$profile"
+                                        fi
+                                        ;;
+                                    */zsh)
+                                        if [ "$profile" = "$HOME/.zshrc" ]; then
+                                            . "$profile"
+                                        fi
+                                        ;;
+                                esac
+                            fi
                         fi
                     done
 
@@ -193,7 +195,7 @@ download_binary_and_run_installer() {
                         echo "# ts-cdk PATH configuration" > "$fish_config_file"
                         echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
                         # Source fish config if we're in fish
-                        if [ "$(basename "$SHELL")" = "fish" ]; then
+                        if [ -n "${SHELL:-}" ] && [ "$(basename "$SHELL")" = "fish" ]; then
                             fish -c "source $fish_config_file"
                         fi
                     fi
