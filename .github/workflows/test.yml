@@ -88,8 +88,11 @@ jobs:
             tar czf ts-cdk-${{ matrix.target }}.tar.gz -C ./${{ matrix.target }} ts-cdk
           fi
           
-          # Test installer with local path
-          INSTALLER_DOWNLOAD_URL="." sh ts-cdk-installer.sh
+          # Get absolute path for the download URL
+          ABSOLUTE_PATH="$(cd "$(dirname ".")" && pwd)/$(basename ".")"
+          
+          # Test installer with absolute path
+          INSTALLER_DOWNLOAD_URL="file://${ABSOLUTE_PATH}" sh ts-cdk-installer.sh
           
           # Test installed binary
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
