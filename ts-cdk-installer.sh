@@ -284,6 +284,13 @@ downloader() {
 get_architecture() {
     local _ostype
     local _cputype
+
+    # If INSTALLER_TARGET_TRIPLE is set, use it directly
+    if [ -n "${INSTALLER_TARGET_TRIPLE:-}" ]; then
+        RETVAL="$INSTALLER_TARGET_TRIPLE"
+        return
+    fi
+
     _ostype="$(uname -s)"
     _cputype="$(uname -m)"
 

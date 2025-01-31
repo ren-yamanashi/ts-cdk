@@ -91,8 +91,10 @@ jobs:
           # Get absolute path for the download URL
           ABSOLUTE_PATH="$(cd "$(dirname ".")" && pwd)/$(basename ".")"
           
-          # Test installer with absolute path
-          INSTALLER_DOWNLOAD_URL="file://${ABSOLUTE_PATH}" sh ts-cdk-installer.sh
+          # Test installer with absolute path and target architecture
+          INSTALLER_DOWNLOAD_URL="file://${ABSOLUTE_PATH}" \
+          INSTALLER_TARGET_TRIPLE="${{ matrix.target }}" \
+          sh ts-cdk-installer.sh
           
           # Test installed binary
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
