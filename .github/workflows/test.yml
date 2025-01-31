@@ -90,15 +90,15 @@ jobs:
           # Create archive in the same directory as installer
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             7z a ts-cdk-${{ matrix.target }}.zip ./${{ matrix.target }}/ts-cdk.exe
+            # Windows環境では絶対パスをcygpath経由で変換
+            ABSOLUTE_PATH="file://$(cygpath -m "$(pwd)")"
           else
             tar czf ts-cdk-${{ matrix.target }}.tar.gz -C ./${{ matrix.target }} ts-cdk
+            ABSOLUTE_PATH="file://$(pwd)"
           fi
           
-          # Get absolute path for the download URL
-          ABSOLUTE_PATH="$(cd "$(dirname ".")" && pwd)/$(basename ".")"
-          
           # Test installer with absolute path and target architecture
-          INSTALLER_DOWNLOAD_URL="file://${ABSOLUTE_PATH}" \
+          MSYS_NO_PATHCONV=1 INSTALLER_DOWNLOAD_URL="${ABSOLUTE_PATH}" \
           INSTALLER_TARGET_TRIPLE="${{ matrix.target }}" \
           sh ts-cdk-installer.sh
           
@@ -109,4 +109,4 @@ jobs:
           else
             export PATH="$HOME/.ts-cdk/bin:$PATH"
             ts-cdk --help || true
-          fi 
+          fi
