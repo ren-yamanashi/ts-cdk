@@ -81,23 +81,15 @@ jobs:
             cp ../target/${{ matrix.target }}/release/ts-cdk ./${{ matrix.target }}/ts-cdk
           fi
           
-          # Create temporary release directory
-          mkdir -p release
-          cd release
-          
-          # Create archive
+          # Create archive in the same directory as installer
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            7z a ../ts-cdk-${{ matrix.target }}.zip ../${{ matrix.target }}/ts-cdk.exe
+            7z a ts-cdk-${{ matrix.target }}.zip ./${{ matrix.target }}/ts-cdk.exe
           else
-            tar czf ../ts-cdk-${{ matrix.target }}.tar.gz -C ../${{ matrix.target }} ts-cdk
+            tar czf ts-cdk-${{ matrix.target }}.tar.gz -C ./${{ matrix.target }} ts-cdk
           fi
-          cd ..
           
-          # Test installer
-          export INSTALLER_DOWNLOAD_URL="file://$(pwd)"
-          
-          # Run installer
-          sh ts-cdk-installer.sh
+          # Test installer with local path
+          INSTALLER_DOWNLOAD_URL="." sh ts-cdk-installer.sh
           
           # Test installed binary
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
