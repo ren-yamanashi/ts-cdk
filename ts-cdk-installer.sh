@@ -183,12 +183,12 @@ download_binary_and_run_installer() {
                                 case "$SHELL" in
                                     */bash)
                                         if [ "$profile" = "$HOME/.bashrc" ]; then
-                                            . "$profile"
+                                            bash -c "source $profile" || true
                                         fi
                                         ;;
                                     */zsh)
                                         if [ "$profile" = "$HOME/.zshrc" ]; then
-                                            . "$profile"
+                                            zsh -c "source $profile" || true
                                         fi
                                         ;;
                                 esac
@@ -208,7 +208,7 @@ download_binary_and_run_installer() {
                         echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
                         # Source fish config if we're in fish
                         if [ -n "${SHELL:-}" ] && [ "$(basename "$SHELL")" = "fish" ]; then
-                            fish -c "source $fish_config_file"
+                            fish -c "source $fish_config_file" || true
                         fi
                     fi
                     ;;
