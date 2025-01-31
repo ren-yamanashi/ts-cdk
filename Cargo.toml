@@ -1,7 +1,8 @@
 [package]
 name = "ts-cdk"
 version = "0.1.0"
-edition = "2021"
+license = "MIT"
+repository = "https://github.com/ren-yamanashi/init-ts-cdk"
 
 [dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
