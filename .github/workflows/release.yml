@@ -1,40 +1,50 @@
 name: Release
 
-permissions:
-  contents: write
-
 on:
   push:
     tags:
       - 'v*'
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: taiki-e/create-gh-release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  upload-assets:
-    needs: create-release
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    runs-on: ${{ matrix.os }}
+          - os: ubuntu-latest
+            artifact_name: ts-cdk-linux
+            asset_name: ts-cdk-linux
+          - os: macos-latest
+            artifact_name: ts-cdk-macos
+            asset_name: ts-cdk-macos
+          - os: windows-latest
+            artifact_name: ts-cdk-windows.exe
+            asset_name: ts-cdk-windows.exe
+
     steps:
       - uses: actions/checkout@v4
-      - uses: taiki-e/upload-rust-binary-action@v1
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build
+        run: cargo build --release
+        
+      - name: Rename binary
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp target/release/ts-cdk.exe ${{ matrix.artifact_name }}
+          else
+            cp target/release/ts-cdk ${{ matrix.artifact_name }}
+          fi
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          bin: ts-cdk
-          target: ${{ matrix.target }}
-          tar: all
-          zip: all
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
