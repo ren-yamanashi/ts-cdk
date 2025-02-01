@@ -1,6 +1,10 @@
 #!/bin/sh
 # shellcheck shell=dash
 
+# NOTE: This is the installer script for ts-cdk, a CLI tool for TypeScript + AWS CDK projects.
+# NOTE: This script automatically downloads the appropriate binary for your system and sets up your environment.
+
+# NOTE: KSH version check - some versions of KSH are not compatible with this installer
 if [ "$KSH_VERSION" = 'Version JM 93t+ 2010-03-05' ]; then
     echo 'this installer does not work with this ksh93 version; please try bash!' >&2
     exit 1
@@ -8,6 +12,7 @@ fi
 
 set -u
 
+# NOTE: Configuration variables that can be overridden through environment variables
 APP_NAME="ts-cdk"
 APP_VERSION="0.1.4"
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/ren-yamanashi/ts-cdk/releases/download/v0.1.4}"
@@ -48,7 +53,75 @@ OPTIONS:
 EOF
 }
 
+# NOTE: Function to configure PATH in shell configuration files
+configure_shell_path() {
+    local _install_dir="$1"
+    local _bin_name="$2"
+
+    # NOTE: Skip PATH modification if ts-cdk is already in PATH
+    if command -v ts-cdk >/dev/null 2>&1; then
+        existing_ts_cdk=$(command -v ts-cdk)
+        if [ "$existing_ts_cdk" != "$_install_dir/$_bin_name" ]; then
+            say "ts-cdk is already installed at $existing_ts_cdk"
+            say "Not modifying PATH as ts-cdk is already available"
+        fi
+        return 0
+    fi
+
+    # NOTE: Add to current shell's PATH immediately for instant usage
+    case "$(uname -s)" in
+        MINGW* | MSYS* | CYGWIN* | Windows_NT)
+            export PATH="$_install_dir:$PATH"
+            ;;
+        *)
+            export PATH="$_install_dir:$PATH"
+            ;;
+    esac
+
+    # NOTE: Configure PATH in common shell configuration files
+    for profile in ~/.profile ~/.bashrc ~/.zshrc; do
+        if [ -w "$profile" ]; then
+            say "adding $_install_dir to PATH in $profile"
+            echo "" >> "$profile"
+            echo "# ts-cdk PATH configuration" >> "$profile"
+            echo "export PATH=\"$_install_dir:\$PATH\"" >> "$profile"
+        fi
+    done
+
+    # NOTE: Special handling for Fish shell
+    configure_fish_path "$_install_dir"
+
+    # NOTE: Display the command to update PATH in the current session
+    case "$(uname -s)" in
+        MINGW* | MSYS* | CYGWIN* | Windows_NT)
+            say "To use ts-cdk in the current session, run:"
+            say "    export PATH=\"$_install_dir:\$PATH\""
+            ;;
+        *)
+            say "To use ts-cdk in the current session, run:"
+            say "    export PATH=\"$_install_dir:\$PATH\""
+            ;;
+    esac
+}
+
+# NOTE: Function to configure PATH for Fish shell
+configure_fish_path() {
+    local _install_dir="$1"
+    
+    if command -v fish >/dev/null 2>&1; then
+        fish_config_dir="$HOME/.config/fish/conf.d"
+        if [ ! -d "$fish_config_dir" ]; then
+            mkdir -p "$fish_config_dir"
+        fi
+        fish_config_file="$fish_config_dir/ts-cdk.fish"
+        say "adding $_install_dir to PATH in $fish_config_file"
+        echo "# ts-cdk PATH configuration" > "$fish_config_file"
+        echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
+    fi
+}
+
 download_binary_and_run_installer() {
+    # NOTE: Check for required system commands before proceeding
     downloader --check
     need_cmd uname
     need_cmd mktemp
@@ -156,82 +229,18 @@ download_binary_and_run_installer() {
     ensure chmod +x "$_install_dir/$_bin_name"
 
     if [ "$NO_MODIFY_PATH" = "0" ]; then
-        # Check if ts-cdk is already available in PATH
-        if command -v ts-cdk >/dev/null 2>&1; then
-            existing_ts_cdk=$(command -v ts-cdk)
-            if [ "$existing_ts_cdk" != "$_install_dir/$_bin_name" ]; then
-                say "ts-cdk is already installed at $existing_ts_cdk"
-                say "Not modifying PATH as ts-cdk is already available"
-            fi
-        else
-            case :$PATH: in
-                *:$_install_dir:*) ;;
-                *)
-                    # Add to current shell's PATH immediately
-                    PATH="$PATH:$_install_dir"
-                    export PATH
-                    
-                    # Add to shell config files
-                    for profile in ~/.profile ~/.bashrc ~/.zshrc; do
-                        if [ -w "$profile" ]; then
-                            say "adding $_install_dir to PATH in $profile"
-                            echo "" >> "$profile"
-                            echo "# ts-cdk PATH configuration" >> "$profile"
-                            echo "export PATH=\"\$PATH:$_install_dir\"" >> "$profile"
-                            # Source the profile immediately if it's the current shell's config
-                            if [ -n "${SHELL:-}" ]; then
-                                case "$SHELL" in
-                                    */bash)
-                                        if [ "$profile" = "$HOME/.bashrc" ]; then
-                                            bash -c "source $profile" || true
-                                        fi
-                                        ;;
-                                    */zsh)
-                                        if [ "$profile" = "$HOME/.zshrc" ]; then
-                                            zsh -c "source $profile" || true
-                                        fi
-                                        ;;
-                                esac
-                            fi
-                        fi
-                    done
-
-                    # Create and source fish config if fish shell is installed
-                    if command -v fish >/dev/null 2>&1; then
-                        fish_config_dir="$HOME/.config/fish/conf.d"
-                        if [ ! -d "$fish_config_dir" ]; then
-                            mkdir -p "$fish_config_dir"
-                        fi
-                        fish_config_file="$fish_config_dir/ts-cdk.fish"
-                        say "adding $_install_dir to PATH in $fish_config_file"
-                        echo "# ts-cdk PATH configuration" > "$fish_config_file"
-                        echo "set -gx PATH \$PATH $_install_dir" >> "$fish_config_file"
-                        # Source fish config if we're in fish
-                        if [ -n "${SHELL:-}" ] && [ "$(basename "$SHELL")" = "fish" ]; then
-                            fish -c "source $fish_config_file" || true
-                        fi
-                    fi
-                    ;;
-            esac
-        fi
+        configure_shell_path "$_install_dir" "$_bin_name"
     fi
 
     ignore rm -rf "$_dir"
 
     say "ts-cdk installation completed!"
-    
-    # Test if ts-cdk is available in the current shell
-    if command -v ts-cdk >/dev/null 2>&1; then
-        say "ts-cdk is now available in your current shell!"
-        say "Try running: ts-cdk --help"
-    else
-        say "Please start a new terminal session or run one of the following commands:"
-        say "    source ~/.bashrc  # for bash"
-        say "    source ~/.zshrc   # for zsh"
-        if command -v fish >/dev/null 2>&1; then
-            say "    source ~/.config/fish/conf.d/ts-cdk.fish  # for fish"
-        fi
-    fi
+    say "ts-cdk is now available in your current shell!"
+    say "Try running: ts-cdk --help"
+    say "When PATH is not passed, you need to start a new terminal session or run one of the following commands:"
+    say "    source ~/.bashrc  # for bash"
+    say "    source ~/.zshrc   # for zsh"
+    say "    source ~/.config/fish/conf.d/ts-cdk.fish  # for fish"
 }
 
 say() {
