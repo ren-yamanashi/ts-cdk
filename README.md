@@ -24,7 +24,7 @@
 ### Using Shell Script (Recommended)
 
 ```sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/ren-yamanashi/ts-cdk/releases/download/v0.1.4/ts-cdk-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/ren-yamanashi/ts-cdk/releases/download/v0.1.0/ts-cdk-installer.sh | sh
 ```
 
 ### Manual Installation
