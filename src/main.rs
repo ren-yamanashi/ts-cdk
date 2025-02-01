@@ -13,10 +13,10 @@ const USAGE: &str = "Usage: ts-cdk <command> [arguments]
 
 Commands:
     init <directory>    Create a new TypeScript + AWS CDK project in the specified directory
-    help               Show this help message
+    help                Show this help message
 
 Example:
-    ts-cdk init my-project    Create a new project in 'my-project' directory";
+    `ts-cdk init my-project`    Create a new project in 'my-project' directory";
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
