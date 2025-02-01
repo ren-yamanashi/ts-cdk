@@ -15,6 +15,10 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7c0ace00-55e3-4d80-87ce-a4aa3b340604" alt="ts-cdk">
+</p>
+
 ## 📦 Installation
 
 ### Using Shell Script (Recommended)
