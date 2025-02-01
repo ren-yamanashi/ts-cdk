@@ -14,8 +14,8 @@ set -u
 
 # NOTE: Configuration variables that can be overridden through environment variables
 APP_NAME="ts-cdk"
-APP_VERSION="0.1.4"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/ren-yamanashi/ts-cdk/releases/download/v0.1.4}"
+APP_VERSION="0.1.0"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/ren-yamanashi/ts-cdk/releases/download/v0.1.0}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}

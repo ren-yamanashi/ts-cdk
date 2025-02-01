@@ -73,11 +73,11 @@ jobs:
       - name: Create release artifacts
         shell: bash
         run: |
-          mkdir -p release/v0.1.4
+          mkdir -p release/v0.1.0
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            7z a release/v0.1.4/ts-cdk-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/ts-cdk.exe
+            7z a release/v0.1.0/ts-cdk-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/ts-cdk.exe
           else
-            tar czf release/v0.1.4/ts-cdk-${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ts-cdk
+            tar czf release/v0.1.0/ts-cdk-${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ts-cdk
           fi
       
       # Upload artifacts
@@ -139,7 +139,7 @@ jobs:
           sleep 2  # Wait for server to start
           
           # Test installer with local HTTP server
-          INSTALLER_DOWNLOAD_URL="http://localhost:8080/v0.1.4" \
+          INSTALLER_DOWNLOAD_URL="http://localhost:8080/v0.1.0" \
           INSTALLER_TARGET_TRIPLE="${{ matrix.target }}" \
           sh ts-cdk-installer.sh
           
